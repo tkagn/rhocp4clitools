@@ -33,7 +33,7 @@
       args:
         chdir: "{{ temp_dir.path }}"
       with_items:
-        - "unzip -f awscli-bundle.zip"
+        - "unzip awscli-bundle.zip"
         - "awscli-bundle/install -i /usr/local/aws -b /bin/aws"
       tags:
         - aws_cli
