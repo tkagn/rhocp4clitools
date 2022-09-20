@@ -4,8 +4,11 @@
 - name: Deploy CLI utilities for deploying Red Hat OpenShift
   hosts: localhost
   become: True
+  vars:
 
   tasks:
+
+# Setup temp directory in current working directory
 
     - name: Get current_working_directory
       shell: pwd
@@ -16,59 +19,44 @@
         path: "{{ current_working_directory.stdout }}/temp"
         state: directory
       register: temp_dir
-    
-    - name: Print temp dir location
-      debug:
-        msg: "The temp directory is {{ temp_dir }}"
-
-    - name: Download the latest AWS Command Line Interface
-      get_url:
-        url: "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip"
-        dest: "{{ temp_dir.path }}/awscli-bundle.zip"
-      tags:
-        - aws_cli
-
-    - name: Install the AWS CLI into /bin/aws
-      command: "{{ item }}"
-      args:
-        chdir: "{{ temp_dir.path }}"
-      with_items:
-        - "unzip awscli-bundle.zip"
-        - "awscli-bundle/install -i /usr/local/aws -b /bin/aws"
-      tags:
-        - aws_cli
-
-    - name: Print temp dir location
-      debug:
-        msg: "{{ current_working_directory.stdout }}"
-      tags:
-        - aws_cli
-    
-    - name: Pause for 15 seconds to read current directory
-      pause:
-        seconds: 15
-      tags:
-        - aws_cli
 
 # Openshift oc command
+
     - name: Download the latest oc command
       get_url: 
         url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz"
         dest: "{{ temp_dir.path }}/openshift-client-linux.tar.gz"
+      tags:            
+        - oc           
+        - kubectl   
 
-    - name: Install oc into /usr/local/bin
+    - name: Install oc and kubectl into /usr/local/bin
       command: "{{ item }}"
       args:
         chdir: "{{ temp_dir.path }}"
       with_items:
         - "tar -xvf openshift-client-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-client-linux.tar.gz /usr/local/bin/README.md"
+      tags:
+        - oc
+        - kubectl
 
+    - name: Install oc and kubectl cli completion script              
+      shell: "{{ item }}"
+      with_items:
+        - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
+        - "/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl-completion"
+      tags:
+        - oc
+        - kubectl
+     
 # Openshift Installer
     - name: Download the latest openshift-install
       get_url:
         url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-install-linux.tar.gz"
         dest: "{{ temp_dir.path }}/openshift-install-linux.tar.gz"
+      tags:
+        - openshift-install
 
     - name: Install openshift-install into /usr/local/bin
       command: "{{ item }}"
@@ -77,6 +65,12 @@
       with_items:
         - "tar -xvf openshift-install-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-install-linux.tar.gz /usr/local/bin/README.md"
+      tags:
+        - openshift-install
+
+    - name: Install openshift-install completion script
+      shell: "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
+      tags: openshift-install
 
 # Helm Tool
     - name: Download and install the latest Helm tool
@@ -84,8 +78,12 @@
         url: "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/helm/latest/helm-linux-amd64"
         dest: "/usr/local/bin/helm"
         mode: "0555"
+      tags:
+        - helm
 
-
+    - name: Install Helm completion script
+      shell: "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
+      tags: helm
 
 # Install completion scripts
     - name: Install completion scripts
@@ -94,8 +92,6 @@
         executable: /bin/bash
       with_items:
         - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
-        - "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
-        - "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
 
 # Post 
   post_tasks:
@@ -103,3 +99,4 @@
       file:
          path: "{{  current_working_directory.stdout }}/temp"
          state: absent
+
