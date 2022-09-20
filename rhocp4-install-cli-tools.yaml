@@ -11,7 +11,7 @@
 # Setup temp directory in current working directory
 
     - name: Get current_working_directory
-      shell: pwd
+      command: pwd
       register: current_working_directory
 
     - name: Generate temp directory in working directory
@@ -42,7 +42,7 @@
         - kubectl
 
     - name: Install oc and kubectl cli completion script              
-      shell: "{{ item }}"
+      command: "{{ item }}"
       with_items:
         - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
         - "/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl-completion"
@@ -69,7 +69,7 @@
         - openshift-install
 
     - name: Install openshift-install completion script
-      shell: "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
+      command: "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
       tags: openshift-install
 
 # Helm Tool
@@ -82,12 +82,12 @@
         - helm
 
     - name: Install Helm completion script
-      shell: "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
+      command: "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
       tags: helm
 
 # Install completion scripts
     - name: Install completion scripts
-      shell: "{{ item }}"
+      command: "{{ item }}"
       args:
         executable: /bin/bash
       with_items:
