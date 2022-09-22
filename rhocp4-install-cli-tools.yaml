@@ -39,7 +39,7 @@
         - kubectl   
 
     - debug:
-        msg: oc_downloaded
+        msg: "{{ oc_downloaded }}"
 
       tags:
         - oc
@@ -53,7 +53,7 @@
       with_items:
         - "tar -xvf openshift-client-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-client-linux.tar.gz /usr/local/bin/README.md"
-      when: oc_downloaded | bool
+      when: oc_downloaded.failed == false 
       notify: Install oc and kubectl CLI Completion Script
 
       tags:
@@ -77,12 +77,11 @@
       with_items:
         - "tar -xvf openshift-install-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-install-linux.tar.gz /usr/local/bin/README.md"
-      when: "{{ openshift_install_downloaded  }}"
+      when: openshift_install_downloaded.failed == false
       notify: Install openshift-install Completion Script  
 
       tags:
         - openshift-install
-
 
 # Helm Tool
     - name: Download and install the latest Helm tool
@@ -108,15 +107,16 @@
   handlers:
 
     - name: Install oc and kubectl CLI Completion Script              
-      command: "{{ item }}"            
+      shell: '{{ item }}'           
       with_items:                      
-        - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
-        - "/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl-completion"
+        - '/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion'
+        - '/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl-completion'
 
     - name: Install openshift-install Completion Script  
-      command: "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
+      shell: '/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion'
   
     - name: Install Helm Completion Script         
-      command: "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
+      shell: '/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion'
+
 
 
