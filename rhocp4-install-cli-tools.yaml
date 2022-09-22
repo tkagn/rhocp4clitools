@@ -14,11 +14,17 @@
       command: pwd
       register: current_working_directory
 
+      tags:
+        - always
+
     - name: Generate temp directory in working directory
       file:
         path: "{{ current_working_directory.stdout }}/temp"
         state: directory
       register: temp_dir
+
+      tags:
+        - always
 
 # Openshift oc command
 
@@ -26,6 +32,8 @@
       get_url: 
         url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz"
         dest: "{{ temp_dir.path }}/openshift-client-linux.tar.gz"
+      register: oc_downloaded
+
       tags:            
         - oc           
         - kubectl   
@@ -37,24 +45,20 @@
       with_items:
         - "tar -xvf openshift-client-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-client-linux.tar.gz /usr/local/bin/README.md"
+      when: "{{ oc_downloaded }}"
+      notify: Install oc and kubectl CLI Completion Script
+
       tags:
         - oc
         - kubectl
 
-    - name: Install oc and kubectl cli completion script              
-      command: "{{ item }}"
-      with_items:
-        - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
-        - "/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl-completion"
-      tags:
-        - oc
-        - kubectl
-     
 # Openshift Installer
     - name: Download the latest openshift-install
       get_url:
         url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-install-linux.tar.gz"
         dest: "{{ temp_dir.path }}/openshift-install-linux.tar.gz"
+      register: openshift_install_downloaded
+
       tags:
         - openshift-install
 
@@ -65,12 +69,12 @@
       with_items:
         - "tar -xvf openshift-install-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-install-linux.tar.gz /usr/local/bin/README.md"
+      when: "{{ openshift_install_downloaded  }}"
+      notify: Install openshift-install Completion Script  
+
       tags:
         - openshift-install
 
-    - name: Install openshift-install completion script
-      command: "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
-      tags: openshift-install
 
 # Helm Tool
     - name: Download and install the latest Helm tool
@@ -78,25 +82,33 @@
         url: "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/helm/latest/helm-linux-amd64"
         dest: "/usr/local/bin/helm"
         mode: "0555"
+      register: helm_downloaded
+      notify: 
+        - Install Helm Completion Script
+
       tags:
         - helm
-
-    - name: Install Helm completion script
-      command: "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
-      tags: helm
-
-# Install completion scripts
-    - name: Install completion scripts
-      command: "{{ item }}"
-      args:
-        executable: /bin/bash
-      with_items:
-        - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
-
+      
 # Post 
   post_tasks:
     - name: Remove temp directory
       file:
          path: "{{  current_working_directory.stdout }}/temp"
          state: absent
+
+# Handlers
+  handlers:
+
+    - name: Install oc and kubectl CLI Completion Script              
+      command: "{{ item }}"            
+      with_items:                      
+        - "/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc-completion"
+        - "/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl-completion"
+
+    - name: Install openshift-install Completion Script  
+      command: "/usr/local/bin/openshift-install completion bash > /etc/bash_completion.d/openshift-install-completion"
+  
+    - name: Install Helm Completion Script         
+      command: "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion"
+
 
