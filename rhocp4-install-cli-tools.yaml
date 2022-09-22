@@ -42,7 +42,6 @@
         - oc
         - kubectl
 
-
     - name: Install oc and kubectl into /usr/local/bin
       command: "{{ item }}"
       args:
@@ -51,7 +50,9 @@
         - "tar -xvf openshift-client-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-client-linux.tar.gz /usr/local/bin/README.md"
       when: oc_downloaded.failed == false 
-      notify: Install oc and kubectl CLI Completion Script
+      notify: 
+        - Install oc and kubectl CLI Completion Script
+        - Source bash_completion
 
       tags:
         - oc
@@ -75,7 +76,9 @@
         - "tar -xvf openshift-install-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-install-linux.tar.gz /usr/local/bin/README.md"
       when: openshift_install_downloaded.failed == false
-      notify: Install openshift-install Completion Script  
+      notify:
+        - Install openshift-install Completion Script  
+        - Source bash_completion
 
       tags:
         - openshift-install
@@ -89,6 +92,7 @@
       register: helm_downloaded
       notify: 
         - Install Helm Completion Script
+        - Source bash_completion
 
       tags:
         - helm
@@ -115,5 +119,6 @@
     - name: Install Helm Completion Script         
       shell: '/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion'
 
-
-
+    - name: Source bash_completion
+      shell: 'source /usr/share/bash-completion/bash_completion'
+    
