@@ -38,6 +38,14 @@
         - oc           
         - kubectl   
 
+    - debug:
+        msg: oc_downloaded
+
+      tags:
+        - oc
+        - kubectl
+
+
     - name: Install oc and kubectl into /usr/local/bin
       command: "{{ item }}"
       args:
@@ -45,7 +53,7 @@
       with_items:
         - "tar -xvf openshift-client-linux.tar.gz -C /usr/local/bin"
         - "rm -f {{ temp_dir.path }}/openshift-client-linux.tar.gz /usr/local/bin/README.md"
-      when: "{{ oc_downloaded }}"
+      when: oc_downloaded | bool
       notify: Install oc and kubectl CLI Completion Script
 
       tags:
