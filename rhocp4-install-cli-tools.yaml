@@ -38,9 +38,6 @@
         - oc           
         - kubectl   
 
-    - debug:
-        msg: "{{ oc_downloaded }}"
-
       tags:
         - oc
         - kubectl
