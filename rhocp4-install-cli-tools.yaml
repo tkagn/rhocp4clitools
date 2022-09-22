@@ -52,7 +52,6 @@
       when: oc_downloaded.failed == false 
       notify: 
         - Install oc and kubectl CLI Completion Script
-        - Source bash_completion
 
       tags:
         - oc
@@ -78,7 +77,6 @@
       when: openshift_install_downloaded.failed == false
       notify:
         - Install openshift-install Completion Script  
-        - Source bash_completion
 
       tags:
         - openshift-install
@@ -92,7 +90,6 @@
       register: helm_downloaded
       notify: 
         - Install Helm Completion Script
-        - Source bash_completion
 
       tags:
         - helm
@@ -119,6 +116,3 @@
     - name: Install Helm Completion Script         
       shell: '/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm-completion'
 
-    - name: Source bash_completion
-      shell: 'source /usr/share/bash-completion/bash_completion'
-    
